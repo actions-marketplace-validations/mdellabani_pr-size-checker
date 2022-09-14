@@ -11,6 +11,7 @@ interface CheckerParams {
   errorSize: number
   warningSize: number
   excludeTitle?: RegExp
+  excludeLabel?: string
   excludePaths?: string[]
 }
 
@@ -18,18 +19,24 @@ export class Checker {
   private readonly errorSize: number
   private readonly warningSize: number
   private readonly excludeTitle: RegExp | undefined
+  private readonly excludeLabel: string | undefined
   private readonly excludePaths: string[]
 
   constructor(params: CheckerParams) {
     this.errorSize = params.errorSize
     this.warningSize = params.warningSize
     this.excludeTitle = params.excludeTitle
+    this.excludeLabel = params.excludeLabel
     this.excludePaths = params.excludePaths ?? []
   }
 
-  check(pr: {title: string; files: {additions: number; filename: string}[]}): Result {
+  check(pr: {
+    title: string
+    labels: string[]
+    files: {additions: number; filename: string}[]
+  }): Result {
     core.debug(`PR title: ${pr.title}`)
-    if (this.shouldSkip(pr.title)) return Result.ok
+    if (this.shouldSkip(pr.title, pr.labels)) return Result.ok
 
     const files = pr.files.filter(f => !this.excludePaths.some(p => minimatch(f.filename, p)))
 
@@ -44,8 +51,12 @@ export class Checker {
     return Result.ok
   }
 
-  private shouldSkip(title: string): boolean {
-    return this.excludeTitle?.test(title) ?? false
+  private shouldSkip(title: string, labels: string[]): boolean {
+    const exclude = this.excludeTitle?.test(title) ?? false
+    if (exclude) {
+      return true
+    }
+    return this.excludeLabel === undefined ? false : labels.includes(this.excludeLabel)
   }
 
   private static getAdditions(data: {additions: number}[]): number {
