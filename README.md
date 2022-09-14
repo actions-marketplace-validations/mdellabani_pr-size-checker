@@ -29,6 +29,7 @@ jobs:
           warningSize: 300 # optional
           warningMessage: ':warning: PR has more than **{allowed} additions**. Consider splitting it into smaller PRs.' # optional
           excludeTitle: 'PR_SIZE_SKIP' # to skip validation if PR title matches regex, optional
+          excludeLabel: 'exclude_label' # to skip validation if one of the PR labels matches string, optional
           excludePaths:  | # to exclude some files from calculation, optional
             README.md
             **/test/resources/*.json
